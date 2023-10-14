@@ -21,7 +21,7 @@ if %errorlevel% NEQ 0 (
 python -m pip install pyinstaller
 
 :: Convert your Python script to an executable
-pyinstaller --onefile main.py
+pyinstaller --onefile --noconsole main.py --name IMS
 
 :: Replace "your_script.py" with the actual name of your Python script
 
