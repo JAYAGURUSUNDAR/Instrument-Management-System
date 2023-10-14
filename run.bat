@@ -23,4 +23,8 @@ echo shortcut.Save >> CreateShortcut.vbs
 cscript //nologo CreateShortcut.vbs
 del CreateShortcut.vbs
 
+:: Add to Windows startup
+set STARTUP_FOLDER=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup
+copy "%CD%\dist\IMS.exe" "%STARTUP_FOLDER%\IMS.exe"
+
 endlocal
