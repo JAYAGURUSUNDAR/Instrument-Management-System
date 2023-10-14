@@ -20,9 +20,20 @@ if %errorlevel% NEQ 0 (
 :: Install PyInstaller using pip
 python -m pip install pyinstaller
 
-:: Convert your Python script to an executable
-pyinstaller --onefile --noconsole main.py --name IMS
+:: Convert your Python script to an executable with a custom icon
+pyinstaller --onefile --noconsole --icon=app_icon.ico main.py --name IMS
 
-:: Replace "your_script.py" with the actual name of your Python script
+:: Replace "main.py" with the actual name of your Python script
+:: Replace "app_icon.ico" with the actual path to your custom icon
+
+:: Create a desktop shortcut
+set SHORTCUT_PATH=%USERPROFILE%\Desktop\IMS.lnk
+echo Set WshShell = WScript.CreateObject("WScript.Shell") > CreateShortcut.vbs
+echo Set shortcut = WshShell.CreateShortcut("%SHORTCUT_PATH%") >> CreateShortcut.vbs
+echo shortcut.TargetPath = "%CD%\dist\IMS.exe" >> CreateShortcut.vbs
+echo shortcut.IconLocation = "%CD%\app_icon.ico" >> CreateShortcut.vbs
+echo shortcut.Save >> CreateShortcut.vbs
+cscript //nologo CreateShortcut.vbs
+del CreateShortcut.vbs
 
 endlocal
