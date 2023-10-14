@@ -4,10 +4,11 @@ from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import ttk
 import customdialog
-from pysqlcipher3 import dbapi2 as s3
+import sqlite3 as s3
 import datetime
 import csv
 import os
+#import time
 
 
 _COLOR="#0071FF"
@@ -15,10 +16,9 @@ _BT_COLOR="#777799"
 _ADMIN_KEY="PHY@1881@"
 _con = s3.connect("ims.db")
 _con.executescript("""
-         PRAGMA KEY="PHY@1881";
          CREATE TABLE IF NOT EXISTS logger (Instrument_name TEXT, Acquisition_no TEXT, date TEXT, time TEXT, user_name TEXT, user_id TEXT, action TEXT);
          CREATE TABLE IF NOT EXISTS login_info (user_id TEXT PRIMARY KEY, username TEXT, password TEXT, tag TEXT);
-         CREATE TABLE IF NOT EXISTS acquisition_reg (particulars TEXT, acquisition_no TEXT, stock_f_no TEXT, grant TEXT, supply_invoice_no TEXT, cost TEXT, cost_plus_gst TEXT, condition TEXT, description TEXT, date TEXT, time TEXT, status TEXT);
+         CREATE TABLE IF NOT EXISTS acquisition_reg (particulars TEXT, acquisition_no TEXT PRIMARY KEY, stock_f_no TEXT, grant TEXT, supply_invoice_no TEXT, cost TEXT, cost_plus_gst TEXT, remarks TEXT,condition TEXT, description TEXT, date TEXT, time TEXT, status TEXT);
          CREATE TABLE IF NOT EXISTS student_list (student_id TEXT PRIMARY KEY, student_name TEXT);
          CREATE TABLE IF NOT EXISTS lab_log (student_id TEXT PRIMARY KEY, instruments TEXT, acquisition_nos TEXT, incharge TEXT, FOREIGN KEY (student_id) REFERENCES student_list(student_id));
          CREATE TABLE IF NOT EXISTS lab_logger (student_id TEXT, instruments TEXT, acquisition_nos TEXT, incharge TEXT, date TEXT, time TEXT);
@@ -104,15 +104,16 @@ class _AddInstruments(tk.Toplevel):
          else:all_ok=True
          
       if all_ok and self.__working.get()==1 or self.__not_working.get()==1:
-         self.__next_to.rebind_events()
          time, date=_get_date_time()
-         _con.execute("INSERT INTO acquisition_reg (particulars, acquisition_no, stock_f_no, grant, supply_invoice_no, cost, cost_plus_gst, remarks, condition, description, date, time) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",(self.__particulars.get(), self.__acq_no.get(), self.__stock_no.get(), self.__grant.get(), self.__sply.get(), self.__cost.get(), self.__cost_plus_gst.get(), self.__remarks.get(), self.__condition_text, self.__description.get(), str(date), str(time)))
-         _con.execute("INSERT INTO logger (Instrument_name, Acquisition_no, date, time, user_name, user_id, action) VALUES (?,?,?,?,?,?,?)", (self.__particulars.get(),self.__acq_no.get(),str(date),str(time),self.__next_to.getUser()[2],self.__next_to.getUser()[0],'added'))
-         _con.commit()
-         messagebox.showinfo("Action", "Successfully added")
-         self.__next_to.getInstrumentsDisplay()["values"] = self.__next_to.arrange_elements()
-         for entry in self.entry_widgets:
-            entry.delete(0, "end")
+         try:
+            _con.execute("INSERT INTO acquisition_reg (particulars, acquisition_no, stock_f_no, grant, supply_invoice_no, cost, cost_plus_gst, remarks, condition, description, date, time, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'working')",(self.__particulars.get(), self.__acq_no.get(), self.__stock_no.get(), self.__grant.get(), self.__sply.get(), self.__cost.get(), self.__cost_plus_gst.get(), self.__remarks.get(), self.__condition_text, self.__description.get(), str(date), str(time)))
+            _con.execute("INSERT INTO logger (Instrument_name, Acquisition_no, date, time, user_name, user_id, action) VALUES (?,?,?,?,?,?,?)", (self.__particulars.get(),self.__acq_no.get(),str(date),str(time),self.__next_to.getUser()[2],self.__next_to.getUser()[0],'added'))
+            _con.commit()
+            messagebox.showinfo("Action", "Successfully added")
+            self.__next_to.getInstrumentsDisplay()["values"] = self.__next_to.arrange_elements()
+            for entry in self.entry_widgets:
+               entry.delete(0, "end")
+         except sqlite3.IntegrityError:messagebox.showinfo("Insertion failed", "Data already exists!")
       elif not all_ok:messagebox.showinfo("Entry filling", "Fill all the entries")
       else:pass
       
@@ -384,13 +385,13 @@ class _ShowInstruments(tk.Frame):
       self.__instruments.setColumnNo(10)
       self.__create_clmns(self.__CLM_HD, self.__CLM)
       self.__instruments.grid(row=4,column=0, columnspan=4)
-      self.__Button = tk.Button(self, text="Log out", command=self.click, font=("Arial", 14, "bold italic"), bg=_BT_COLOR, relief="raised", highlightbackground="#888880", highlightthickness=1, bd=3, fg="white")
+      self.__Button = tk.Button(self, text="Log out", command=self.click, font=("Arial", 14, "bold italic"), bg=_BT_COLOR, relief="raised", highlightbackground="#888880", highlightthickness=1, bd=2, fg="white")
       self.__Button.grid(row=5, column=0, pady=30, padx=10, sticky="w")
-      self.__view_issued_bt = tk.Button(self, text="issued history",  font=("Arial", 14, "bold italic"), relief="raised", highlightbackground="#888880", highlightthickness=1, bg=_BT_COLOR, bd=3, fg="white", command=self.issued_bt_fun)
+      self.__view_issued_bt = tk.Button(self, text="issued history",  font=("Arial", 14, "bold italic"), relief="raised", highlightbackground="#888880", highlightthickness=1, bg=_BT_COLOR, bd=2, fg="white", command=self.issued_bt_fun)
       self.__view_issued_bt.grid(row=5, column=1, padx=10)
-      self.__issue_bt = tk.Button(self, text="issue", font=("Arial", 14, "bold italic"), relief="raised", highlightbackground="#888880", highlightthickness=1, command=self.__issue_bt_fn, bg=_BT_COLOR, bd=3, fg="white")
+      self.__issue_bt = tk.Button(self, text="issue", font=("Arial", 14, "bold italic"), relief="raised", highlightbackground="#888880", highlightthickness=1, command=self.__issue_bt_fn, bg=_BT_COLOR, bd=2, fg="white")
       self.__issue_bt.grid(row=5, column=2, padx=10)
-      self.__view_bt = tk.Button(self, text="view",  font=("Arial", 14, "bold italic"), relief="raised", highlightbackground="#888880", highlightthickness=1, command=self.__view_bt_fn, bg=_BT_COLOR, bd=3, fg="white")
+      self.__view_bt = tk.Button(self, text="view",  font=("Arial", 14, "bold italic"), relief="raised", highlightbackground="#888880", highlightthickness=1, command=self.__view_bt_fn, bg=_BT_COLOR, bd=2, fg="white")
       self.__view_bt.grid(row=5, column=3, padx=5)
       self.center_treeview_columns()
       self.__master = master
@@ -401,6 +402,7 @@ class _ShowInstruments(tk.Frame):
       self.__master.protocol("WM_DELETE_WINDOW", lambda:messagebox.showinfo("", "You cannot close, until you log out!"))
       self.__master.unbind("<Return>")
       self.__usr_msg_blink(0)
+      
    
    class ViewIssued(tk.Toplevel):
       def __init__(self,master):
@@ -442,6 +444,19 @@ class _ShowInstruments(tk.Frame):
       except s3.IntegrityError:messagebox.showerror("Error", "Student details already entered!!")
       except TypeError:pass
       finally:_con.commit()
+   
+   """
+   For checking How many toplevel windows are opened. It will print how many windows are opened after every second
+   This is commented.
+   """
+   #def __print_opened(self, n):
+   #   self.__top = [w for w in self.__master.winfo_children() if isinstance(w, tk.Toplevel)]
+   #   if n:
+   #      print(self.__top)
+   #      n=False
+   #   else:n=True
+   #   self.after(1000, lambda:self.__print_opened(True))
+         
      
 
    def issued_bt_fun(self):
@@ -493,9 +508,9 @@ class _ShowInstruments(tk.Frame):
       self.__stock.config(text="total: "+str(_con.execute("SELECT COUNT(*) FROM acquisition_reg;").fetchone()[0]))
       for i,j in enumerate(_con.execute("SELECT * FROM acquisition_reg;")):
          j=list(j)
-         if str(j[11])!="issued" and str(j[7])=="working":j[11]="\u2610"
-         else:j[11]="\u2612"
-         self.__instruments.insert("", "end", i,values=(str(i+1), j[10], j[0], j[1], j[2], j[3], j[4], j[5], j[6], j[7], j[11]))
+         if str(j[12])!="issued" and str(j[8])=="working":j[12]="\u2610"
+         else:j[12]="\u2612"
+         self.__instruments.insert("", "end", i,values=(str(i+1), j[10], j[0], j[1], j[2], j[3], j[4], j[5], j[6], j[8], j[12]))
       
    def __create_clmns(self, clmn_heading, clms):
       for i,j in zip(clms,clmn_heading):
@@ -524,8 +539,7 @@ class _ShowInstruments(tk.Frame):
       
       
    def click(self):
-      rslt = messagebox.askyesno("log out request", "Are you sure want to log out?")
-      if rslt:
+      if messagebox.askyesno("log out request", "Are you sure want to log out?"):
          self.destroy()
          lp = _LoginPage(self.__master)
          
@@ -602,8 +616,8 @@ class _ShowInstruments(tk.Frame):
       if stk_dsply:self.__stock.config(text="stock: "+str(_con.execute("SELECT COUNT(*) FROM acquisition_reg WHERE particulars=?;",(selected_item,)).fetchone()[0]))
       for i,j in enumerate(_con.execute("SELECT * FROM acquisition_reg WHERE particulars=?;", (selected_item,))):
          j=list(j)
-         if j[11]!="issued":j[11]="\u2610"
-         self.__instruments.insert("", "end",i , values=(str(i+1), j[10], j[0], j[1], j[2], j[3], j[4], j[5], j[6], j[7], j[11]))
+         if j[12]!="issued":j[12]="\u2610"
+         self.__instruments.insert("", "end",i , values=(str(i+1), j[10], j[0], j[1], j[2], j[3], j[4], j[5], j[6], j[8], j[12]))
       
    
    def select_content(self, e):
