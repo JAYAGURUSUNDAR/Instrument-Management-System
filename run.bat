@@ -31,7 +31,7 @@ set SHORTCUT_PATH=%USERPROFILE%\Desktop\IMS.lnk
 echo Set WshShell = WScript.CreateObject("WScript.Shell") > CreateShortcut.vbs
 echo Set shortcut = WshShell.CreateShortcut("%SHORTCUT_PATH%") >> CreateShortcut.vbs
 echo shortcut.TargetPath = "%CD%\dist\IMS.exe" >> CreateShortcut.vbs
-echo shortcut.IconLocation = "%CD%\app_icon.ico" >> CreateShortcut.vbs
+echo shortcut.IconLocation = "%CD%\IMS.ico" >> CreateShortcut.vbs
 echo shortcut.Save >> CreateShortcut.vbs
 cscript //nologo CreateShortcut.vbs
 del CreateShortcut.vbs
