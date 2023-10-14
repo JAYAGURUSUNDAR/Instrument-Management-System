@@ -21,7 +21,7 @@ if %errorlevel% NEQ 0 (
 python -m pip install pyinstaller
 
 :: Convert your Python script to an executable with a custom icon
-pyinstaller --onefile --noconsole --icon=app_icon.ico main.py --name IMS
+pyinstaller --onefile --noconsole --icon=IMS.ico main.py --name IMS
 
 :: Replace "main.py" with the actual name of your Python script
 :: Replace "app_icon.ico" with the actual path to your custom icon
