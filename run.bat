@@ -4,7 +4,7 @@ setlocal
 python --version 2>NUL
 if %errorlevel% NEQ 0 (
     echo Python is not installed. Installing Python..
-    powershell -command "(New-Object System.Net.WebClient).DownloadFile('https://www.python.org/ftp/python/3.x.x/python-3.x.x-amd64.exe', 'python_installer.exe')"
+    powershell -command "(New-Object System.Net.WebClient).DownloadFile('https://www.python.org/ftp/python/3.8.9/python-3.8.9-amd64.exe', 'python_installer.exe')"
     python_installer.exe /quiet InstallAllUsers=1 PrependPath=
     del python_installer.exe
 )
